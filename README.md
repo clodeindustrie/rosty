@@ -1,4 +1,4 @@
 rosty
 =====
 
-Host file manager
+Very simple host file manager for my own use.

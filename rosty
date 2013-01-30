@@ -1,6 +1,6 @@
 #!/usr/bin/ruby -wKU
 
-class Hosty
+class Rosty
 
   @@hosts =[]
   @@filepath = "/etc/hosts"
@@ -103,5 +103,5 @@ EOF
   end
 end
 
-h = Hosty.new
+h = Rosty.new
 h.execute(*ARGV)
