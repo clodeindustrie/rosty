@@ -1,0 +1,107 @@
+#!/usr/bin/ruby -wKU
+
+class Hosty
+
+  @@hosts =[]
+  @@filepath = "/etc/hosts"
+
+  def readHostFile
+    file = File.read @@filepath
+
+    lines = file.split("\n")
+
+    @@hosts = lines.select{|i| i =~ %r[^[^\#]]}.map{|i| i.split("\s")}
+  end
+
+  def writeHostFile
+    f = File.new @@filepath, "w"
+    f.write(makeNice)
+    f.close
+  end
+
+  def makeNice
+    @@hosts.map{ |i| i.join(" ") }.join("\n")
+  end
+
+  def numberedList
+    y = 0
+    joined = @@hosts.map do |i|
+      y = y + 1
+      y.to_s + " - " + i.join(" ")
+    end
+    joined.join("\n")
+  end
+
+  def displayPair(pair)
+    return "#{pair.first} #{pair.last}"
+  end
+
+  def deleteItem(item)
+    if item.class == Array
+      deleted = @@hosts.delete(item)
+    else
+      deleted = @@hosts.delete_at(item.to_i - 1)
+    end
+
+    if deleted.nil?
+      puts "Item Missing\n"
+    else
+      writeHostFile
+      puts displayPair(deleted) + " Deleted ! \n"
+    end
+  end
+
+  def execute(*args)
+    command = args.shift
+
+    if command
+      readHostFile
+      if command == "add"
+        if !(ip = args.shift) || !(host = args.shift)
+          puts "something is missing\n"
+          return
+        end
+
+        @@hosts << [ip, host]
+        writeHostFile
+        displayPair(@@hosts.last) + " Added ! \n"
+      elsif command == "del"
+        if !(ip = args.shift) || !(host = args.shift)
+          puts numberedList
+          puts "Pick an entry to remove:"
+         index = $stdin.gets.chomp
+          while !index.match(/\d+/)
+            puts "pick a number:"
+            index = $stdin.gets.chomp
+          end
+
+          deleteItem(index)
+          return
+        end
+
+        deleteItem([ip, host])
+      elsif command == "get"
+        puts makeNice
+      else
+        puts self.help
+      end
+    else
+      puts self.help
+    end
+  end
+
+  def help
+    return <<EOF
+Usage: hosty command [IP] [HOSTNAME]
+
+    Example:
+      hosty add 0.0.0.0 hostname
+      hosty del 0.0.0.0 hostname
+      hosty get
+      hosty del
+EOF
+  end
+end
+
+h = Hosty.new
+h.execute(*ARGV)
